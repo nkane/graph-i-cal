@@ -1,0 +1,265 @@
+    Camera2D camera = { 0 };
+    camera.target.x = grid.originScreenSpace.x;
+    camera.target.y = grid.originScreenSpace.y;
+    camera.offset.x = grid.originScreenSpace.x; 
+    camera.offset.y = grid.originScreenSpace.y; 
+    camera.rotation = 0.0f;
+    camera.zoom = 1.0f;
+
+    // handle input
+    camera.zoom += (float)(GetMouseWheelMove() * 0.05);
+    if (camera.zoom > 3.0f)
+    {
+        camera.zoom = 3.0f;
+    }
+    else if (camera.zoom < 0.1f)
+    {
+        camera.zoom = 0.1f; 
+    }
+    
+    /*
+    int i;
+    for (i = 0; i < g.yRange.high; i++)
+    {
+
+    }
+    */
+
+    // draw x-axis
+    //DrawLineEx(screenSpaceV1, screenSpaceV2, 2.0f, RAYWHITE);
+
+
+#if 0
+    int i = 0;
+    Vector2 v1;
+    v1.x = -10;
+    v1.y = -10;
+    Vector2 v2;
+    v2.x = g.screenDimensions.x;
+    v2.y = v1.y;
+    for (i = -10; i <= g.screenDimensions.y; i += g.squareSize.x)
+    {
+        memset(buff, 0, 20);
+        sprintf(buff, "%d", i);
+        DrawText(buff, v1.x + 20, v1.y + 20, 8, RAYWHITE);
+        DrawLineEx(v1, v2, 1.0f, color);
+        v1.y += g.squareSize.y;
+        v2.y = v1.y;
+    }
+#endif
+    /*
+    // normalized: [-1, 1]
+    Vector2 x_axis_begin;
+    x_axis_begin.x = 0;
+    x_axis_begin.y = g.originScreenSpace.y; 
+
+    Vector2 x_axis_end;
+    x_axis_end.x = g.screenDimensions.x;
+    x_axis_end.y = x_axis_begin.y;
+    
+    Vector2 y_axis_begin;
+    y_axis_begin.x = g.originScreenSpace.x;
+    y_axis_begin.y = 0;
+    
+    Vector2 y_axis_end;
+    y_axis_end.x = y_axis_begin.x;
+    y_axis_end.y = g.screenDimensions.y;
+    
+    Color color;
+    color.r = 130;
+    color.b = 130;
+    color.g = 130;
+    color.a = 128;
+    
+    // draw horizontal lines
+    int i = 0;
+    Vector2 v1;
+    v1.x = 0;
+    v1.y = 0;
+    Vector2 v2;
+    v2.x = g.screenDimensions.x;
+    v2.y = v1.y;
+    for (i = 0; i <= g.screenDimensions.y; i += g.padding.x)
+    {
+        DrawLineEx(v1, v2, 1.0f, color);
+        v1.y += g.padding.y;
+        v2.y = v1.y;
+    }
+    
+    // draw vertical lines
+    i = 0;
+    v1.x = 0;
+    v1.y = 0;
+    v2.x = v1.x;
+    v2.y = g.screenDimensions.y;
+    for (i = 0; i <= g.screenDimensions.x; i += g.padding.y)
+    {
+        DrawLineEx(v1, v2, 1.0f, color);
+        v1.x += g.padding.x;
+        v2.x = v1.x;
+    }
+    
+    // draw x axis
+    DrawLineEx(x_axis_begin, x_axis_end, 2.0f, RAYWHITE);
+    
+    // draw y axis
+    DrawLineEx(y_axis_begin, y_axis_end, 2.0f, RAYWHITE);
+    */
+}
+
+#if 0
+void
+Draw_Cursor(Grid2D g, Camera2D c)
+{
+    Vector2 mPosition = GetMousePosition();
+    float mPositionMag = Vector2_Magnitude(mPosition);
+    Vector2 mPositionUnit = Vector2_Normalize(mPosition);
+    float scaleFactor = 0.0f;
+    DrawLineEx(g.originScreenSpace, mPosition, 2.0f, RED);
+
+    Vector2 projectedLine;
+    projectedLine.x = mPosition.x;
+    projectedLine.y = g.originScreenSpace.y;
+    DrawLineEx(g.originScreenSpace, projectedLine, 2.0f, LIME);
+    DrawLineEx(mPosition, projectedLine, 2.0f, ORANGE);
+    
+    // convert mouse position from screen space to coordinate space
+    Vector2 mCoordinatePosition;
+    mCoordinatePosition.x = mPosition.x - g.originScreenSpace.x;
+    mCoordinatePosition.y = -(mPosition.y - g.originScreenSpace.y);
+    
+    Color color;
+    color.r = 150;
+    color.b = 150;
+    color.g = 150;
+    color.a = 200;
+    DrawRectangle(mPosition.x + 20, mPosition.y + 20, 350, 175, color);
+    
+    char buff[256];
+    memset(buff, 0, 256);
+    sprintf(buff, "grid coordinates: (%f, %f)", mCoordinatePosition.x / g.squareSize.x, mCoordinatePosition.y / g.squareSize.y);
+    DrawText(buff, mPosition.x + 20, mPosition.y + 20, 8, RAYWHITE);
+    
+    float theta = Vector2_Angle_Between_Vectors(g.horizontalAxis[0], mCoordinatePosition);
+    theta = Radians_To_Degrees(theta);
+    memset(buff, 0, 256);
+    sprintf(buff, "angle: %f degrees", theta);
+    _ASSERT(theta != NAN);
+    DrawText(buff, mPosition.x + 20, mPosition.y + 40, 8, RAYWHITE);
+    
+    memset(buff, 0, 256);
+    sprintf(buff, "mouse coordinates: (%f, %f)", mPosition.x, mPosition.y);
+    DrawText(buff, mPosition.x + 20, mPosition.y + 60, 8, RAYWHITE);
+
+    memset(buff, 0, 256);
+    sprintf(buff, "camera zoom: %f", c.zoom);
+    DrawText(buff, mPosition.x + 20, mPosition.y + 80, 8, RAYWHITE);
+
+    memset(buff, 0, 256);
+    sprintf(buff, "vector magnitude: %f", mPositionMag);
+    DrawText(buff, mPosition.x + 20, mPosition.y + 100, 8, RAYWHITE);
+
+    memset(buff, 0, 256);
+    sprintf(buff, "unit vector: (%f, %f)", mPositionUnit.x, mPositionUnit.y);
+    DrawText(buff, mPosition.x + 20, mPosition.y + 120, 8, RAYWHITE);
+
+    memset(buff, 0, 256);
+    sprintf(buff, "origin screen space coordinates: (%f, %f)", g.originScreenSpace.x, g.originScreenSpace.y);
+    DrawText(buff, mPosition.x + 20, mPosition.y + 140, 8, RAYWHITE);
+
+    memset(buff, 0, 256);
+    sprintf(buff, "scale factor: %f", scaleFactor);
+    DrawText(buff, mPosition.x + 20, mPosition.y + 160, 8, RAYWHITE);
+
+    /*
+    Vector2 t2;
+    t2.x = mPosition.x - 10;
+    t2.y = mPosition.y + 10;
+
+    Vector2 t3;
+    t3.x = mPosition.x + 10;
+    t3.y = mPosition.y + 10;
+
+    // get the angle between right x-axis and vector
+    Vector2 rightXAxis;
+    rightXAxis.x = screen.x;
+    rightXAxis.y = vStartPos.y;
+
+    */
+    //DrawTriangle(mPosition, t2, t3, RED);
+}
+#endif
+
+
+
+    Vector2 v1;
+    // (-10, 0)
+    v1.x = g.xRange.low;
+    v1.y = 0;
+    // (10, 0)
+    Vector2 v2;
+    v2.x = g.xRange.high;
+    v2.y = 0;
+
+    memset(buff, 0, 256);
+    sprintf(buff, "ranges [ (%.2f, %.2f) , (%.2f, %.2f) ]", v1.x, v1.y, v2.x, v2.y) ;
+    DrawText(buff, 300, 200, 14, RAYWHITE);
+
+    // (-1, 0)
+    Vector2 v1Normal = Vector2_Normalize(v1);
+    // (1, 0)
+    Vector2 v2Normal = Vector2_Normalize(v2);
+
+    memset(buff, 0, 256);
+    sprintf(buff, 
+            "ranges normalized [ (%.2f, %.2f) , (%.2f, %.2f) ]", 
+            v1Normal.x, v1Normal.y, 
+            v2Normal.x, v2Normal.y) ;
+    DrawText(buff, 300, 225, 14, RAYWHITE);
+
+    Vector2 screenSpaceV1 = Normalize_To_Screen_Space(g, v1Normal);
+    Vector2 screenSpaceV2 = Normalize_To_Screen_Space(g, v2Normal);
+
+    memset(buff, 0, 256);
+    sprintf(buff,
+            "screen space [ (%.2f, %.2f) , (%.2f, %.2f) ]",
+            screenSpaceV1.x, 
+            screenSpaceV1.y, 
+            screenSpaceV2.x, 
+            screenSpaceV2.y) ;
+    DrawText(buff, 300, 250, 14, RAYWHITE);
+
+    Vector2 translationVector;
+    translationVector.x = 0;
+    translationVector.y = 10;
+
+    memset(buff, 0, 256);
+    sprintf(buff, "translation (%.2f, %.2f)", translationVector.x, translationVector.y);
+    DrawText(buff, 300, 275, 14, RAYWHITE);
+
+    Vector2 translationNormal = Vector2_Normalize(translationVector);
+    memset(buff, 0, 256);
+    sprintf(buff, "translation Normal (%.2f, %.2f)", translationNormal.x, translationNormal.y);
+    DrawText(buff, 300, 300, 14, RAYWHITE);
+
+    Vector2 translationScreenSpace = Normalize_To_Screen_Space(g, translationNormal);
+    memset(buff, 0, 256);
+    sprintf(buff,
+            "translation screen space (%.2f, %.2f)",
+            translationScreenSpace.x, translationScreenSpace.y);
+    DrawText(buff, 300, 325, 14, RAYWHITE);
+
+    Vector2 currentLineNormal = Vector2_Add(v1Normal, translationNormal);;
+    memset(buff, 0, 256);
+    sprintf(buff,
+            "current line normal (%.2f, %.2f)",
+            currentLineNormal.x, currentLineNormal.y);
+    DrawText(buff, 300, 350, 14, RAYWHITE);
+
+    Vector2 currentLineScreenSpace = Normalize_To_Screen_Space(g, currentLineNormal);
+    memset(buff, 0, 256);
+    sprintf(buff,
+            "current line screen space (%.2f, %.2f)",
+            currentLineScreenSpace.x,
+            currentLineScreenSpace.y);
+    DrawText(buff, 300, 375, 14, RAYWHITE);

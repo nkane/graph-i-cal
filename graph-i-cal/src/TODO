@@ -1,0 +1,10 @@
+General:
+  ✔ create vector2_normalize function @done(20-07-20 11:29)
+  ✔ use normalized coordinates for Draw_2D_Grid @done(20-07-21 21:23)
+  ✔ create screen space to grid space transformation function @done(20-07-21 21:23)
+  ✔ grid should use the actual spacing defined in the grid structure for lines @done(20-07-25 09:43)
+  ✔ add raylib gui project in to set up code base @done(20-07-25 09:45)
+  ☐ create github repository for project
+  ☐ separate vector2 functions in separate header file
+  ☐ only compute vectors once for drawing
+    -- currently this is being done every draw call, which is terrible
