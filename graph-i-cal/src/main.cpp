@@ -17,6 +17,8 @@ typedef struct _grid2d
 {
     Vector2 originScreenSpace;
     Vector2 screenDimensions;
+    Vector2 currrentLocalCoordinates;
+    float   currentAngle;
     Vector2 horizontalAxis[2];
     Vector2 verticalAxis[2];
     float zoom;
@@ -44,8 +46,7 @@ void
 Draw_2D_Grid(Grid2D g);
 
 void
-Draw_Cursor(Grid2D g); 
-
+Draw_Cursor(Grid2D *g); 
 
 float
 Vector2_Magnitude(Vector2 v);
@@ -102,20 +103,45 @@ main(void)
     // y grid range [-20, 20]
     grid.yRange.low = -20;
     grid.yRange.high = 20;
-    
+    // grid current zoom level
     grid.zoom = 1.0f;
+    // current local coordinates
+    grid.currrentLocalCoordinates.x = 0;
+    grid.currrentLocalCoordinates.y = 0;
     
     InitWindow(grid.screenDimensions.x, grid.screenDimensions.y, "default grid");
     SetTargetFPS(60);            
-    
-    int dropdownBoxActive = 0;
-    bool dropdownBoxEditMode = false;
-    Rectangle box = { 0 };
-    box.height = 25;
-    box.width = 65;
-    box.x = 125;
-    box.y = 30;
-    
+
+    // load gui style
+    GuiLoadStyle("styles/ashes/ashes.rgs");
+
+    Rectangle controlBoxRectangle;
+    controlBoxRectangle.width = grid.screenDimensions.x / 8;
+    controlBoxRectangle.height = grid.screenDimensions.y / 4;
+    controlBoxRectangle.x = 10;
+    controlBoxRectangle.y = 10;
+
+    Color background;
+    background.r = 125;
+    background.g = 125;
+    background.b = 125;
+    background.a = 175;
+
+    Rectangle labelRectangle;
+    labelRectangle.x = controlBoxRectangle.x + 5;
+    labelRectangle.y = controlBoxRectangle.y + 20;
+    labelRectangle.width = 110;
+    labelRectangle.height = 10;
+
+    int origY = labelRectangle.y;
+    int tempY = labelRectangle.y + 20;
+
+    char buffer[1024] = { 0 };
+    memset(buffer, 0, 1024);
+    sprintf(buffer, "cursor: (%.2f, %.2f)", grid.currrentLocalCoordinates.x, grid.currrentLocalCoordinates.y);
+    memset(buffer, 0, 1024);
+    sprintf(buffer, "angle: %.2f", grid.currentAngle);
+
     while (!WindowShouldClose()) 
     {
         grid.zoom += ((float)GetMouseWheelMove() * 0.05f);
@@ -130,16 +156,21 @@ main(void)
         // draw
         BeginDrawing();
         {
-            GuiSetStyle(DROPDOWNBOX, TEXT_ALIGNMENT, GUI_TEXT_ALIGN_LEFT);
             ClearBackground(BLACK); 
             Draw_2D_Grid(grid);
-            Draw_Cursor(grid);
-            /*
-            if (GuiDropdownBox(box, "#01#ONE;#02#TWO;#03#THREE;#04#FOUR", &dropdownBoxActive, &dropdownBoxEditMode)) 
-            {
-                dropdownBoxEditMode = !dropdownBoxEditMode;
-            }
-*/
+            Draw_Cursor(&grid);
+            // TODO(nick): clean all this stuff up
+            // coordinates information
+            DrawRectangleRec(controlBoxRectangle, background);
+            GuiGroupBox(controlBoxRectangle, "Coordinate Information");
+            memset(buffer, 0, 1024);
+            labelRectangle.y = origY;
+            sprintf(buffer, "cursor: (%.2f, %.2f)", grid.currrentLocalCoordinates.x, grid.currrentLocalCoordinates.y);
+            GuiLabel(labelRectangle, buffer);
+            memset(buffer, 0, 1024);
+            sprintf(buffer, "angle: %.2f", grid.currentAngle);
+            labelRectangle.y = tempY;
+            GuiLabel(labelRectangle, buffer);
         }
         EndDrawing();
     }
@@ -233,15 +264,20 @@ Draw_2D_Grid(Grid2D g)
 }
 
 void
-Draw_Cursor(Grid2D g)
+Draw_Cursor(Grid2D *g)
 {
     Vector2 mScreenSpace = GetMousePosition();
-    DrawLineEx(g.originScreenSpace, mScreenSpace, 2.0f, RED);
-    Vector2 mGridSpace = Screen_Space_To_Grid_Space(g, mScreenSpace);
-    char buff[256] = { 0 };
-    memset(buff, 0, 256);
-    sprintf(buff, "grid coordinates: (%f, %f)", mGridSpace.x, mGridSpace.y);
-    DrawText(buff, g.originScreenSpace.x + 20, g.originScreenSpace.y + 20, 8, RAYWHITE);
+    DrawLineEx(g->originScreenSpace, mScreenSpace, 2.0f, RED);
+    // TODO(nick): might be able to pull this out?
+    g->currrentLocalCoordinates = Screen_Space_To_Grid_Space(*g, mScreenSpace);
+    Vector2 normalizeLocalCoordinates = Vector2_Normalize(g->currrentLocalCoordinates);
+    g->currentAngle = Vector2_Angle_Between_Vectors(g->horizontalAxis[0], normalizeLocalCoordinates);
+    g->currentAngle = Radians_To_Degrees(g->currentAngle);
+    // we are in third and foruth quadrant, need to add 180 degrees
+    if (normalizeLocalCoordinates.y < 0)
+    {
+        g->currentAngle = 180 + (180 - g->currentAngle);
+    }
 }
 
 float
