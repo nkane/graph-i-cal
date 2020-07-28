@@ -278,6 +278,18 @@ Draw_Cursor(Grid2D *g)
     {
         g->currentAngle = 180 + (180 - g->currentAngle);
     }
+    // draw cosine
+    Vector2 cursorCosine = { 0 };
+    cursorCosine.x = mScreenSpace.x;
+    cursorCosine.y = g->originScreenSpace.y;
+    DrawLineEx(g->originScreenSpace, cursorCosine, 2.0f, BLUE);
+    DrawLineEx(mScreenSpace, cursorCosine, 2.0f, BLUE);
+    // draw sine
+    Vector2 cursorSine = { 0 };
+    cursorSine.x = g->originScreenSpace.x;
+    cursorSine.y = mScreenSpace.y;
+    DrawLineEx(g->originScreenSpace, cursorSine, 2.0f, GREEN);
+    DrawLineEx(mScreenSpace, cursorSine, 2.0f, GREEN);
 }
 
 float

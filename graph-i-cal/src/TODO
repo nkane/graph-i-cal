@@ -5,7 +5,9 @@ General:
   ✔ grid should use the actual spacing defined in the grid structure for lines @done(20-07-25 09:43)
   ✔ add raylib gui project in to set up code base @done(20-07-25 09:45)
   ✔ Create github repository for project @done(20-07-25 09:52)
-  ☐ 
+  ☐ draw cos, sin, and tan lines
+  ☐ display cos, sin, and tan values on GUI
+  ☐ clean up GUI code
   ☐ separate vector2 functions in separate header file
   ☐ only compute vectors once for drawing
     -- currently this is being done every draw call, which is terrible
