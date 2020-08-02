@@ -111,37 +111,37 @@ main(void)
     
     InitWindow(grid.screenDimensions.x, grid.screenDimensions.y, "default grid");
     SetTargetFPS(60);            
-
+    
     // load gui style
     GuiLoadStyle("styles/ashes/ashes.rgs");
-
+    
     Rectangle controlBoxRectangle;
     controlBoxRectangle.width = grid.screenDimensions.x / 8;
     controlBoxRectangle.height = grid.screenDimensions.y / 4;
     controlBoxRectangle.x = 10;
     controlBoxRectangle.y = 10;
-
+    
     Color background;
     background.r = 125;
     background.g = 125;
     background.b = 125;
     background.a = 175;
-
+    
     Rectangle labelRectangle;
     labelRectangle.x = controlBoxRectangle.x + 5;
     labelRectangle.y = controlBoxRectangle.y + 20;
     labelRectangle.width = 110;
     labelRectangle.height = 10;
-
+    
     int origY = labelRectangle.y;
     int tempY = labelRectangle.y + 20;
-
+    
     char buffer[1024] = { 0 };
     memset(buffer, 0, 1024);
     sprintf(buffer, "cursor: (%.2f, %.2f)", grid.currrentLocalCoordinates.x, grid.currrentLocalCoordinates.y);
     memset(buffer, 0, 1024);
     sprintf(buffer, "angle: %.2f", grid.currentAngle);
-
+    
     while (!WindowShouldClose()) 
     {
         grid.zoom += ((float)GetMouseWheelMove() * 0.05f);
@@ -290,6 +290,8 @@ Draw_Cursor(Grid2D *g)
     cursorSine.y = mScreenSpace.y;
     DrawLineEx(g->originScreenSpace, cursorSine, 2.0f, GREEN);
     DrawLineEx(mScreenSpace, cursorSine, 2.0f, GREEN);
+    // draw circle
+    DrawCircleSectorLines(g->originScreenSpace, 20.0f, 90, 90 + (int)g->currentAngle, 1000, YELLOW);
 }
 
 float
