@@ -337,7 +337,7 @@ Draw_GUI(Grid2D *g, VectorControlState *s)
     s->displayCosine = GuiCheckBox(labelRectangle, "cosine", s->displayCosine);
     tempY += 20;
     labelRectangle.y = tempY;
-   s->displaySine = GuiCheckBox(labelRectangle, "sine", s->displaySine);
+    s->displaySine = GuiCheckBox(labelRectangle, "sine", s->displaySine);
 }
 
 float
