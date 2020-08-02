@@ -42,10 +42,13 @@ typedef struct _grid2d
     } yRange;
 } Grid2D;
 
-// TODO(nick): might be able to pack options in to a int64
+// TODO(nick): 
+// - might be able to pack options in to a int64
 typedef struct _vectorControlState
 {
     bool displayAngle;
+    bool displayCosine;
+    bool displaySine;
 } VectorControlState;
 
 void
@@ -250,17 +253,23 @@ Draw_Cursor(Grid2D *g, VectorControlState *s)
         g->currentAngle = 180 + (180 - g->currentAngle);
     }
     // draw cosine
-    Vector2 cursorCosine = { 0 };
-    cursorCosine.x = mScreenSpace.x;
-    cursorCosine.y = g->originScreenSpace.y;
-    DrawLineEx(g->originScreenSpace, cursorCosine, 2.0f, BLUE);
-    DrawLineEx(mScreenSpace, cursorCosine, 2.0f, BLUE);
+    if (s->displayCosine)
+    {
+        Vector2 cursorCosine = { 0 };
+        cursorCosine.x = mScreenSpace.x;
+        cursorCosine.y = g->originScreenSpace.y;
+        DrawLineEx(g->originScreenSpace, cursorCosine, 2.0f, BLUE);
+        DrawLineEx(mScreenSpace, cursorCosine, 2.0f, BLUE);
+    }
     // draw sine
-    Vector2 cursorSine = { 0 };
-    cursorSine.x = g->originScreenSpace.x;
-    cursorSine.y = mScreenSpace.y;
-    DrawLineEx(g->originScreenSpace, cursorSine, 2.0f, GREEN);
-    DrawLineEx(mScreenSpace, cursorSine, 2.0f, GREEN);
+    if (s->displaySine)
+    {
+        Vector2 cursorSine = { 0 };
+        cursorSine.x = g->originScreenSpace.x;
+        cursorSine.y = mScreenSpace.y;
+        DrawLineEx(g->originScreenSpace, cursorSine, 2.0f, GREEN);
+        DrawLineEx(mScreenSpace, cursorSine, 2.0f, GREEN);
+    }
     // draw circle that represents angle
     if (s->displayAngle)
     {
@@ -322,14 +331,13 @@ Draw_GUI(Grid2D *g, VectorControlState *s)
     labelRectangle.y = tempY;
     labelRectangle.width = 10;
     labelRectangle.height = 10;
-    if (GuiCheckBox(labelRectangle, "Display Angle", s->displayAngle))
-    {
-        s->displayAngle = true;
-    }
-    else
-    {
-        s->displayAngle = false;
-    }
+    s->displayAngle = GuiCheckBox(labelRectangle, "angle", s->displayAngle);
+    tempY += 20;
+    labelRectangle.y = tempY;
+    s->displayCosine = GuiCheckBox(labelRectangle, "cosine", s->displayCosine);
+    tempY += 20;
+    labelRectangle.y = tempY;
+   s->displaySine = GuiCheckBox(labelRectangle, "sine", s->displaySine);
 }
 
 float
