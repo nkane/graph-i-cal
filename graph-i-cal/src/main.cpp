@@ -42,11 +42,20 @@ typedef struct _grid2d
     } yRange;
 } Grid2D;
 
+// TODO(nick): might be able to pack options in to a int64
+typedef struct _vectorControlState
+{
+    bool displayAngle;
+} VectorControlState;
+
 void
 Draw_2D_Grid(Grid2D g);
 
 void
-Draw_Cursor(Grid2D *g); 
+Draw_Cursor(Grid2D *g, VectorControlState *s); 
+
+void
+Draw_GUI(Grid2D *g, VectorControlState *s);
 
 float
 Vector2_Magnitude(Vector2 v);
@@ -108,42 +117,15 @@ main(void)
     // current local coordinates
     grid.currrentLocalCoordinates.x = 0;
     grid.currrentLocalCoordinates.y = 0;
+
+    VectorControlState vectorControlState = { 0 };
     
     InitWindow(grid.screenDimensions.x, grid.screenDimensions.y, "default grid");
     SetTargetFPS(60);            
     
-    // load gui style
-    GuiLoadStyle("styles/ashes/ashes.rgs");
-    
-    Rectangle controlBoxRectangle;
-    controlBoxRectangle.width = grid.screenDimensions.x / 8;
-    controlBoxRectangle.height = grid.screenDimensions.y / 4;
-    controlBoxRectangle.x = 10;
-    controlBoxRectangle.y = 10;
-    
-    Color background;
-    background.r = 125;
-    background.g = 125;
-    background.b = 125;
-    background.a = 175;
-    
-    Rectangle labelRectangle;
-    labelRectangle.x = controlBoxRectangle.x + 5;
-    labelRectangle.y = controlBoxRectangle.y + 20;
-    labelRectangle.width = 110;
-    labelRectangle.height = 10;
-    
-    int origY = labelRectangle.y;
-    int tempY = labelRectangle.y + 20;
-    
-    char buffer[1024] = { 0 };
-    memset(buffer, 0, 1024);
-    sprintf(buffer, "cursor: (%.2f, %.2f)", grid.currrentLocalCoordinates.x, grid.currrentLocalCoordinates.y);
-    memset(buffer, 0, 1024);
-    sprintf(buffer, "angle: %.2f", grid.currentAngle);
-    
     while (!WindowShouldClose()) 
     {
+        // TODO(nick): place in another function
         grid.zoom += ((float)GetMouseWheelMove() * 0.05f);
         if (grid.zoom > 3.0f)
         {
@@ -158,19 +140,8 @@ main(void)
         {
             ClearBackground(BLACK); 
             Draw_2D_Grid(grid);
-            Draw_Cursor(&grid);
-            // TODO(nick): clean all this stuff up
-            // coordinates information
-            DrawRectangleRec(controlBoxRectangle, background);
-            GuiGroupBox(controlBoxRectangle, "Coordinate Information");
-            memset(buffer, 0, 1024);
-            labelRectangle.y = origY;
-            sprintf(buffer, "cursor: (%.2f, %.2f)", grid.currrentLocalCoordinates.x, grid.currrentLocalCoordinates.y);
-            GuiLabel(labelRectangle, buffer);
-            memset(buffer, 0, 1024);
-            sprintf(buffer, "angle: %.2f", grid.currentAngle);
-            labelRectangle.y = tempY;
-            GuiLabel(labelRectangle, buffer);
+            Draw_Cursor(&grid,&vectorControlState);
+            Draw_GUI(&grid, &vectorControlState);
         }
         EndDrawing();
     }
@@ -215,7 +186,7 @@ Draw_2D_Grid(Grid2D g)
         v1.y--;
         v2.y--;
     }
-    
+
     // top left of grid space
     v1.x = g.xRange.low;
     v1.y = g.yRange.high;
@@ -264,7 +235,7 @@ Draw_2D_Grid(Grid2D g)
 }
 
 void
-Draw_Cursor(Grid2D *g)
+Draw_Cursor(Grid2D *g, VectorControlState *s)
 {
     Vector2 mScreenSpace = GetMousePosition();
     DrawLineEx(g->originScreenSpace, mScreenSpace, 2.0f, RED);
@@ -273,7 +244,7 @@ Draw_Cursor(Grid2D *g)
     Vector2 normalizeLocalCoordinates = Vector2_Normalize(g->currrentLocalCoordinates);
     g->currentAngle = Vector2_Angle_Between_Vectors(g->horizontalAxis[0], normalizeLocalCoordinates);
     g->currentAngle = Radians_To_Degrees(g->currentAngle);
-    // we are in third and foruth quadrant, need to add 180 degrees
+    // we are in third and fourth quadrant, need to add 180 degrees
     if (normalizeLocalCoordinates.y < 0)
     {
         g->currentAngle = 180 + (180 - g->currentAngle);
@@ -290,8 +261,75 @@ Draw_Cursor(Grid2D *g)
     cursorSine.y = mScreenSpace.y;
     DrawLineEx(g->originScreenSpace, cursorSine, 2.0f, GREEN);
     DrawLineEx(mScreenSpace, cursorSine, 2.0f, GREEN);
-    // draw circle
-    DrawCircleSectorLines(g->originScreenSpace, 20.0f, 90, 90 + (int)g->currentAngle, 1000, YELLOW);
+    // draw circle that represents angle
+    if (s->displayAngle)
+    {
+        DrawCircleSectorLines(g->originScreenSpace, 20.0f, 90, 90 + (int)g->currentAngle, 1000, YELLOW);
+    }
+}
+
+// TODO(nick): 
+// - normalize all of these coordinates
+// - rename variables
+// - use control state structure
+void
+Draw_GUI(Grid2D *g, VectorControlState *s)
+{
+    // load gui style
+    GuiLoadStyle("styles/ashes/ashes.rgs");
+    
+    Rectangle controlBoxRectangle;
+    controlBoxRectangle.width = g->screenDimensions.x / 8;
+    controlBoxRectangle.height = g->screenDimensions.y / 4;
+    controlBoxRectangle.x = 10;
+    controlBoxRectangle.y = 10; 
+    
+    Rectangle labelRectangle;
+    labelRectangle.x = controlBoxRectangle.x + 5;
+    labelRectangle.y = controlBoxRectangle.y + 20;
+    labelRectangle.width = 110;
+    labelRectangle.height = 10; 
+    
+    int origY = labelRectangle.y;
+    int tempY = labelRectangle.y + 20;
+    
+    char buffer[1024] = { 0 };
+    memset(buffer, 0, 1024);
+    sprintf(buffer, "cursor: (%.2f, %.2f)", g->currrentLocalCoordinates.x, g->currrentLocalCoordinates.y);
+    memset(buffer, 0, 1024);
+    sprintf(buffer, "angle: %.2f", g->currentAngle);    
+    
+    Color background;
+    background.r = 125;
+    background.g = 125;
+    background.b = 125;
+    background.a = 175;
+    
+    // draw coordinate information
+    DrawRectangleRec(controlBoxRectangle, background);
+    GuiGroupBox(controlBoxRectangle, "Coordinate Information");
+    memset(buffer, 0, 1024);
+    labelRectangle.y = origY;
+    sprintf(buffer, "cursor: (%.2f, %.2f)", g->currrentLocalCoordinates.x, g->currrentLocalCoordinates.y);
+    GuiLabel(labelRectangle, buffer);
+    memset(buffer, 0, 1024);
+    sprintf(buffer, "angle: %.2f", g->currentAngle);
+    labelRectangle.y = tempY;
+    GuiLabel(labelRectangle, buffer);
+
+    // draw check boxes
+    tempY += 20;
+    labelRectangle.y = tempY;
+    labelRectangle.width = 10;
+    labelRectangle.height = 10;
+    if (GuiCheckBox(labelRectangle, "Display Angle", s->displayAngle))
+    {
+        s->displayAngle = true;
+    }
+    else
+    {
+        s->displayAngle = false;
+    }
 }
 
 float
