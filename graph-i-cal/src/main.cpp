@@ -90,7 +90,7 @@ Screen_Space_To_Grid_Space(Grid2D g, Vector2 v);
 int 
 main(void)
 {
-    Grid2D grid = { 0 };
+    Grid2D grid = {};
     // screen dimensions
     grid.screenDimensions.x = 1280;
     grid.screenDimensions.y = 720;
@@ -121,7 +121,7 @@ main(void)
     grid.currrentLocalCoordinates.x = 0;
     grid.currrentLocalCoordinates.y = 0;
 
-    VectorControlState vectorControlState = { 0 };
+    VectorControlState vectorControlState = {};
     
     InitWindow(grid.screenDimensions.x, grid.screenDimensions.y, "default grid");
     SetTargetFPS(60);            
@@ -161,7 +161,7 @@ Draw_2D_Grid(Grid2D g)
     color.g = 130;
     color.a = 128;
     
-    char buff[256] = { 0 };
+    char buff[256] = {};
     
     // top left of grid space
     Vector2 v1;
@@ -173,10 +173,10 @@ Draw_2D_Grid(Grid2D g)
     v2.x = g.xRange.high;
     v2.y = g.yRange.high;
     
-    Vector2 v1Normalized  = { 0 };
-    Vector2 v2Normalized  = { 0 };
-    Vector2 v1ScreenSpace = { 0 };
-    Vector2 v2ScreenSpace = { 0 };
+    Vector2 v1Normalized  = {};
+    Vector2 v2Normalized  = {};
+    Vector2 v1ScreenSpace = {};
+    Vector2 v2ScreenSpace = {};
     
     // draw horizontal grid lines
     for (int i = g.yRange.low; i <= g.yRange.high; i++)
@@ -241,12 +241,16 @@ void
 Draw_Cursor(Grid2D *g, VectorControlState *s)
 {
     Vector2 mScreenSpace = GetMousePosition();
+    // draw cursor vector
     DrawLineEx(g->originScreenSpace, mScreenSpace, 2.0f, RED);
     // TODO(nick): might be able to pull this out?
     g->currrentLocalCoordinates = Screen_Space_To_Grid_Space(*g, mScreenSpace);
     Vector2 normalizeLocalCoordinates = Vector2_Normalize(g->currrentLocalCoordinates);
     g->currentAngle = Vector2_Angle_Between_Vectors(g->horizontalAxis[0], normalizeLocalCoordinates);
     g->currentAngle = Radians_To_Degrees(g->currentAngle);
+    // draw triangle on tip of vector
+    Vector2 t2 = {};
+
     // we are in third and fourth quadrant, need to add 180 degrees
     if (normalizeLocalCoordinates.y < 0)
     {
@@ -255,7 +259,7 @@ Draw_Cursor(Grid2D *g, VectorControlState *s)
     // draw cosine
     if (s->displayCosine)
     {
-        Vector2 cursorCosine = { 0 };
+        Vector2 cursorCosine = {};
         cursorCosine.x = mScreenSpace.x;
         cursorCosine.y = g->originScreenSpace.y;
         DrawLineEx(g->originScreenSpace, cursorCosine, 2.0f, BLUE);
@@ -264,7 +268,7 @@ Draw_Cursor(Grid2D *g, VectorControlState *s)
     // draw sine
     if (s->displaySine)
     {
-        Vector2 cursorSine = { 0 };
+        Vector2 cursorSine = {};
         cursorSine.x = g->originScreenSpace.x;
         cursorSine.y = mScreenSpace.y;
         DrawLineEx(g->originScreenSpace, cursorSine, 2.0f, GREEN);
@@ -302,7 +306,7 @@ Draw_GUI(Grid2D *g, VectorControlState *s)
     int origY = labelRectangle.y;
     int tempY = labelRectangle.y + 20;
     
-    char buffer[1024] = { 0 };
+    char buffer[1024] = {};
     memset(buffer, 0, 1024);
     sprintf(buffer, "cursor: (%.2f, %.2f)", g->currrentLocalCoordinates.x, g->currrentLocalCoordinates.y);
     memset(buffer, 0, 1024);
@@ -387,7 +391,7 @@ Radians_To_Degrees(float radians)
 Vector2
 Vector2_Add(Vector2 v1, Vector2 v2)
 {
-    Vector2 r = { 0 };
+    Vector2 r = {};
     r.x = v1.x + v2.x;
     r.y = v1.y + v2.y;
     return r;
@@ -399,7 +403,7 @@ Vector2_Add(Vector2 v1, Vector2 v2)
 Vector2
 Normalize_To_Grid_Space(Grid2D g, Vector2 v)
 {
-    Vector2 r = { 0 };
+    Vector2 r = {};
     r.x = v.x / g.xRange.high;
     r.y = v.y / g.yRange.high;
     return r;
@@ -408,7 +412,7 @@ Normalize_To_Grid_Space(Grid2D g, Vector2 v)
 Vector2
 Normalize_To_Screen_Space(Grid2D g, Vector2 normal)
 {
-    Vector2 r = { 0 };
+    Vector2 r = {};
     // screen space actual origin (0, 0) is top left of screen,
     // with x-axis going positive in toward the right hand side
     // and the y-axis increasing going toward the bottom of the
@@ -434,7 +438,7 @@ Normalize_To_Screen_Space(Grid2D g, Vector2 normal)
 Vector2
 Screen_Space_To_Grid_Space(Grid2D g, Vector2 v)
 {
-    Vector2 r = { 0 };
+    Vector2 r = {};
     r.x =  (v.x - g.originScreenSpace.x) / g.zoom;
     r.y = -(v.y - g.originScreenSpace.y) / g.zoom;
     r.x /= g.originScreenSpace.x;
