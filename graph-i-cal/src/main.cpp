@@ -266,36 +266,36 @@ Draw_Cursor(Grid2D *g, VectorControlState *s)
         g->currentAngleDegrees = 180 + (180 - g->currentAngleDegrees);
     }
     // NOTE(nick): just draw a simple triangle at the origin of the grid
+
+#if 0
     Vector2 t1 = {};
-    t1.x = 0.00f;
-    t1.y = 0.10f;
-    t1 = Normalize_To_Screen_Space(*g, t1);
+    t1.x = 0.0f;
+    t1.y = 1.0f;
     Vector2 t2 = {};
-    t2.x = -0.10f;
-    t2.y = 0.00;
-    t2 = Normalize_To_Screen_Space(*g, t2);
+    t2.x = t1.x - 1.0f;
+    t2.y = t1.y - 1.0f;
     Vector2 t3 = {};
-    t3.x = 0.10f;
-    t3.y = 0.00;
+    t3.x = t1.x + 1.0f;
+    t3.y = t1.y - 1.0f;
+#else
+    Vector2 t1 = Screen_Space_To_Grid_Space(*g, mScreenSpace);
+    Vector2 t2 = {};
+    t2.x = t1.x - 0.25f;
+    t2.y = t1.y - 0.25f;
+    Vector2 t3 = {};
+    t3.x = t1.x + 0.25f;
+    t3.y = t2.y;
+#endif
+
+    t1 = Normalize_To_Grid_Space(*g, t1);
+    t2 = Normalize_To_Grid_Space(*g, t2);
+    t3 = Normalize_To_Grid_Space(*g, t3);
+
+    t1 = Normalize_To_Screen_Space(*g, t1);
+    t2 = Normalize_To_Screen_Space(*g, t2);
     t3 = Normalize_To_Screen_Space(*g, t3);
     // vertex order is counterclockwise
     DrawTriangle(t1, t2, t3, GREEN);
-#if 0
-    // draw triangle on tip of vector
-    Vector2 t2 = {};
-    t2.x = normalizedCoordinates.x - 0.10f;
-    t2.y = normalizedCoordinates.y + 0.10f;
-    //t2 = Vector2_Rotate(t2, g->currentAngleRadians);
-    t2 = Normalize_To_Grid_Space(*g, t2);
-    t2 = Normalize_To_Screen_Space(*g, t2);
-    Vector2 t3 = {};
-    t3.x = normalizedCoordinates.x + 0.10f;
-    t3.y = normalizedCoordinates.y - 0.10f;
-    //t3 = Vector2_Rotate(t3, g->currentAngleRadians);
-    t3 = Normalize_To_Grid_Space(*g, t3);
-    t3 = Normalize_To_Screen_Space(*g, t3);
-    DrawTriangle(mScreenSpace, t2, t3, RED);
-#endif 
     // draw cosine
     if (s->displayCosine)
     {
