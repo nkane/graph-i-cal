@@ -17,7 +17,7 @@ typedef struct _grid2d
 {
     Vector2 originScreenSpace;
     Vector2 screenDimensions;
-    Vector2 currrentLocalCoordinates;
+    Vector2 currentLocalCoordinates;
     float   currentAngleRadians;
     float   currentAngleDegrees;
     Vector2 horizontalAxis[2];
@@ -91,6 +91,9 @@ Screen_Space_To_Grid_Space(Grid2D g, Vector2 v);
 Vector2
 Vector2_Rotate(Vector2 v, float radians);
 
+Vector2
+Vector2_Subtract(Vector2 v1, Vector2 v2);
+
 int 
 main(void)
 {
@@ -122,8 +125,8 @@ main(void)
     // grid current zoom level
     grid.zoom = 1.0f;
     // current local coordinates
-    grid.currrentLocalCoordinates.x = 0;
-    grid.currrentLocalCoordinates.y = 0;
+    grid.currentLocalCoordinates.x = 0;
+    grid.currentLocalCoordinates.y = 0;
 
     VectorControlState vectorControlState = {};
     
@@ -246,7 +249,7 @@ void
 Draw_Cursor(Grid2D *g, VectorControlState *s)
 {
     Vector2 mScreenSpace = GetMousePosition();
-#if 1 
+#if 0 
     // NOTE(nick): just for testing (1, 1) -> 45 deg
     mScreenSpace.x = 1.0f;
     mScreenSpace.y = 1.0f;
@@ -256,8 +259,8 @@ Draw_Cursor(Grid2D *g, VectorControlState *s)
     // draw cursor vector
     DrawLineEx(g->originScreenSpace, mScreenSpace, 2.0f, RED);
     // TODO(nick): might be able to pull this out?
-    g->currrentLocalCoordinates = Screen_Space_To_Grid_Space(*g, mScreenSpace);
-    Vector2 normalizedCoordinates = Vector2_Normalize(g->currrentLocalCoordinates);
+    g->currentLocalCoordinates = Screen_Space_To_Grid_Space(*g, mScreenSpace);
+    Vector2 normalizedCoordinates = Vector2_Normalize(g->currentLocalCoordinates);
     g->currentAngleRadians = Vector2_Angle_Between_Vectors(g->horizontalAxis[0], normalizedCoordinates);
     g->currentAngleDegrees = Radians_To_Degrees(g->currentAngleRadians);
     // we are in third and fourth quadrant, need to add 180 degrees
@@ -265,19 +268,22 @@ Draw_Cursor(Grid2D *g, VectorControlState *s)
     {
         g->currentAngleDegrees = 180 + (180 - g->currentAngleDegrees);
     }
-    // NOTE(nick): just draw a simple triangle at the origin of the grid
 
-#if 0
+    // TODO(nick): position at the origin, rotate 45 degrees, and then translate to top
     Vector2 t1 = {};
     t1.x = 0.0f;
-    t1.y = 1.0f;
+    t1.y = 0.25f;
     Vector2 t2 = {};
-    t2.x = t1.x - 1.0f;
-    t2.y = t1.y - 1.0f;
+    t2.x = t1.x - 0.25f;
+    t2.y = t1.y - 0.25f;
     Vector2 t3 = {};
-    t3.x = t1.x + 1.0f;
-    t3.y = t1.y - 1.0f;
-#else
+    t3.x = t1.x + 0.25f;
+    t3.y = t1.y - 0.25f;
+
+    t1 = Vector2_Rotate(t1, -g->currentAngleRadians);
+    t2 = Vector2_Rotate(t2, -g->currentAngleRadians);
+    t3 = Vector2_Rotate(t3, -g->currentAngleRadians);
+#if 0
     Vector2 t1 = Screen_Space_To_Grid_Space(*g, mScreenSpace);
     Vector2 t2 = {};
     t2.x = t1.x - 0.25f;
@@ -286,7 +292,6 @@ Draw_Cursor(Grid2D *g, VectorControlState *s)
     t3.x = t1.x + 0.25f;
     t3.y = t2.y;
 #endif
-
     t1 = Normalize_To_Grid_Space(*g, t1);
     t2 = Normalize_To_Grid_Space(*g, t2);
     t3 = Normalize_To_Grid_Space(*g, t3);
@@ -294,6 +299,13 @@ Draw_Cursor(Grid2D *g, VectorControlState *s)
     t1 = Normalize_To_Screen_Space(*g, t1);
     t2 = Normalize_To_Screen_Space(*g, t2);
     t3 = Normalize_To_Screen_Space(*g, t3);
+
+    Vector2 delta = Vector2_Subtract(mScreenSpace, g->originScreenSpace);
+
+    t1 = Vector2_Add(t1, delta);
+    t2 = Vector2_Add(t2, delta);
+    t3 = Vector2_Add(t3, delta);
+
     // vertex order is counterclockwise
     DrawTriangle(t1, t2, t3, GREEN);
     // draw cosine
@@ -348,7 +360,7 @@ Draw_GUI(Grid2D *g, VectorControlState *s)
     
     char buffer[1024] = {};
     memset(buffer, 0, 1024);
-    sprintf(buffer, "cursor: (%.2f, %.2f)", g->currrentLocalCoordinates.x, g->currrentLocalCoordinates.y);
+    sprintf(buffer, "cursor: (%.2f, %.2f)", g->currentLocalCoordinates.x, g->currentLocalCoordinates.y);
     memset(buffer, 0, 1024);
     sprintf(buffer, "angle: %.2f", g->currentAngleDegrees);
     
@@ -363,7 +375,7 @@ Draw_GUI(Grid2D *g, VectorControlState *s)
     GuiGroupBox(controlBoxRectangle, "Coordinate Information");
     memset(buffer, 0, 1024);
     labelRectangle.y = origY;
-    sprintf(buffer, "cursor: (%.2f, %.2f)", g->currrentLocalCoordinates.x, g->currrentLocalCoordinates.y);
+    sprintf(buffer, "cursor: (%.2f, %.2f)", g->currentLocalCoordinates.x, g->currentLocalCoordinates.y);
     GuiLabel(labelRectangle, buffer);
     memset(buffer, 0, 1024);
     sprintf(buffer, "angle: %.2f", g->currentAngleDegrees);
@@ -497,7 +509,25 @@ Vector2_Rotate(Vector2 v, float radians)
         cos(radians), -sin(radians),
         sin(radians),  cos(radians),
     };
-    r.x = Vector2_DotProduct(v, *((Vector2 *)rotationMatrix));
-    r.y = Vector2_DotProduct(v, *((Vector2 *)(rotationMatrix + 2)));
+    Vector2 rot = *((Vector2 *)rotationMatrix);
+    r.x = Vector2_DotProduct(v, rot);
+    rot = *((Vector2 *)(rotationMatrix + 2));
+    r.y = Vector2_DotProduct(v, rot);
+    return r;
+}
+
+// TODO(nick):
+Vector2
+Vector2_Translate()
+{
+    return Vector2 {};
+}
+
+Vector2
+Vector2_Subtract(Vector2 v1, Vector2 v2)
+{
+    Vector2 r = {};
+    r.x = v1.x - v2.x;
+    r.y = v1.y - v2.y;
     return r;
 }
