@@ -250,8 +250,8 @@ Draw_Cursor(Grid2D *g, VectorControlState *s)
 {
     Vector2 mScreenSpace = GetMousePosition();
 #if 0 
-    // NOTE(nick): just for testing (1, 1) -> 45 deg
-    mScreenSpace.x = 1.0f;
+    // NOTE(nick): just for testing 
+    mScreenSpace.x = -1.0f;
     mScreenSpace.y = 1.0f;
     mScreenSpace = Normalize_To_Grid_Space(*g, mScreenSpace);
     mScreenSpace = Normalize_To_Screen_Space(*g, mScreenSpace);
@@ -267,6 +267,7 @@ Draw_Cursor(Grid2D *g, VectorControlState *s)
     if (normalizedCoordinates.y < 0)
     {
         g->currentAngleDegrees = 180 + (180 - g->currentAngleDegrees);
+        g->currentAngleRadians = PI + (PI - g->currentAngleRadians); 
     }
 
     // TODO(nick): position at the origin, rotate 45 degrees, and then translate to top
@@ -280,9 +281,18 @@ Draw_Cursor(Grid2D *g, VectorControlState *s)
     t3.x = t1.x + 0.25f;
     t3.y = t1.y - 0.25f;
 
-    t1 = Vector2_Rotate(t1, -g->currentAngleRadians);
-    t2 = Vector2_Rotate(t2, -g->currentAngleRadians);
-    t3 = Vector2_Rotate(t3, -g->currentAngleRadians);
+    float theta = g->currentAngleRadians;
+    if (theta <= 45.0f)
+    {
+        theta = (PI/2.0f) - theta;
+        theta = -theta;
+    }
+    else if (theta >= 180.0f)
+    {
+    }
+    t1 = Vector2_Rotate(t1, theta);
+    t2 = Vector2_Rotate(t2, theta);
+    t3 = Vector2_Rotate(t3, theta);
 #if 0
     Vector2 t1 = Screen_Space_To_Grid_Space(*g, mScreenSpace);
     Vector2 t2 = {};
