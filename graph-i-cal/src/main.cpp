@@ -47,6 +47,7 @@ typedef struct _grid2d
 // - might be able to pack options in to a int64
 typedef struct _vectorControlState
 {
+    Vector2 currentVector;
     bool displayAngle;
     bool displayCosine;
     bool displaySine;
@@ -151,8 +152,8 @@ main(void)
         {
             ClearBackground(BLACK); 
             Draw_2D_Grid(grid);
-            Draw_Cursor(&grid,&vectorControlState);
             Draw_GUI(&grid, &vectorControlState);
+            Draw_Cursor(&grid,&vectorControlState);
         }
         EndDrawing();
     }
@@ -249,13 +250,15 @@ void
 Draw_Cursor(Grid2D *g, VectorControlState *s)
 {
     Vector2 mScreenSpace = GetMousePosition();
-#if 0 
+    Vector2 mInput = mScreenSpace;
+#if 1 
     // NOTE(nick): just for testing 
-    mScreenSpace.x = -1.0f;
+    mScreenSpace.x = 1.0;
     mScreenSpace.y = 1.0f;
     mScreenSpace = Normalize_To_Grid_Space(*g, mScreenSpace);
     mScreenSpace = Normalize_To_Screen_Space(*g, mScreenSpace);
 #endif
+    DrawCircle(mInput.x, mInput.y, 2.0f, RED);
     // draw cursor vector
     DrawLineEx(g->originScreenSpace, mScreenSpace, 2.0f, RED);
     // TODO(nick): might be able to pull this out?
@@ -273,22 +276,19 @@ Draw_Cursor(Grid2D *g, VectorControlState *s)
     // TODO(nick): position at the origin, rotate 45 degrees, and then translate to top
     Vector2 t1 = {};
     t1.x = 0.0f;
-    t1.y = 0.25f;
+    t1.y = 0.20f;
     Vector2 t2 = {};
-    t2.x = t1.x - 0.25f;
-    t2.y = t1.y - 0.25f;
+    t2.x = t1.x - 0.15;
+    t2.y = t1.y - 0.20f;
     Vector2 t3 = {};
-    t3.x = t1.x + 0.25f;
-    t3.y = t1.y - 0.25f;
+    t3.x = t1.x + 0.15f;
+    t3.y = t1.y - 0.20f;
 
     float theta = g->currentAngleRadians;
     if (theta <= 45.0f)
     {
         theta = (PI/2.0f) - theta;
         theta = -theta;
-    }
-    else if (theta >= 180.0f)
-    {
     }
     t1 = Vector2_Rotate(t1, theta);
     t2 = Vector2_Rotate(t2, theta);
@@ -311,13 +311,14 @@ Draw_Cursor(Grid2D *g, VectorControlState *s)
     t3 = Normalize_To_Screen_Space(*g, t3);
 
     Vector2 delta = Vector2_Subtract(mScreenSpace, g->originScreenSpace);
-
+    delta.x *= 0.75f;
+    delta.y *= 0.75f;
     t1 = Vector2_Add(t1, delta);
     t2 = Vector2_Add(t2, delta);
     t3 = Vector2_Add(t3, delta);
 
     // vertex order is counterclockwise
-    DrawTriangle(t1, t2, t3, GREEN);
+    DrawTriangle(mScreenSpace, t2, t3, GREEN);
     // draw cosine
     if (s->displayCosine)
     {
@@ -404,6 +405,17 @@ Draw_GUI(Grid2D *g, VectorControlState *s)
     tempY += 20;
     labelRectangle.y = tempY;
     s->displaySine = GuiCheckBox(labelRectangle, "sine", s->displaySine);
+
+    // text input
+    controlBoxRectangle.y += g->originScreenSpace.y + 20;
+    DrawRectangleRec(controlBoxRectangle, background);
+    GuiGroupBox(controlBoxRectangle, "Coordinate Input");
+    labelRectangle.width = 100;
+    labelRectangle.height = 100;
+    labelRectangle.x = controlBoxRectangle.x + 25;
+    labelRectangle.y = controlBoxRectangle.y + 25;
+    char tempBuffer[256];
+    GuiTextInputBox(labelRectangle, "test input", "test input", "button", tempBuffer);
 }
 
 float
